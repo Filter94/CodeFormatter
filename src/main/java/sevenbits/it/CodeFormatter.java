@@ -33,7 +33,6 @@ public class CodeFormatter {
     }
 
     /**
-     *
      * @param inStream - stream with unformatted java code
      * @param outStream - stream where formatted java code will be written
      * @param options - contains options for formatter

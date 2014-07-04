@@ -155,7 +155,73 @@ public class CodeFormatterTest {
                     nestingLevel--;
             }
         }
+    }
 
-        assert true;
+    @org.junit.Test
+    public void testLineFeedAfterOpening() {
+        javaCode = "{{{{{{{{{{{{{{}}{{{{{{}}}}}}{{}}}}}}}}}}}}}}";
+        FormatOptions formatOptions = new FormatOptions();
+        try {
+            makeTest(formatOptions);
+        } catch (FormatterException ex) {
+            if (logger.isEnabledFor(Level.ERROR))
+                logger.error(ex.getMessage());
+        } catch (StreamException ex) {
+            if (logger.isEnabledFor(Level.ERROR))
+                logger.error(ex.getMessage());
+        }
+        String [] strings = formattedCode.split("\n");
+        for (int i = 0; i < strings.length; i++){
+            Character currentChar = '\n';
+            int j;
+            for(j = 0; j < strings[i].length() ; j++){
+                if(strings[i].charAt(j) == '{') {
+                    currentChar = strings[i].charAt(j);
+                    break;
+                }
+            }
+            if (currentChar == '{') {
+                try {
+                    strings[i].charAt(j + 1);
+                }
+                catch(Exception ex){
+                    assert true;
+                }
+            }
+        }
+    }
+
+    @org.junit.Test
+    public void testLineFeedAfterClosing() {
+        javaCode = "{{{{{{{{{{{{{{}}{{{{{{}}}}}}{{}}}}}}}}}}}}}}";
+        FormatOptions formatOptions = new FormatOptions();
+        try {
+            makeTest(formatOptions);
+        } catch (FormatterException ex) {
+            if (logger.isEnabledFor(Level.ERROR))
+                logger.error(ex.getMessage());
+        } catch (StreamException ex) {
+            if (logger.isEnabledFor(Level.ERROR))
+                logger.error(ex.getMessage());
+        }
+        String [] strings = formattedCode.split("\n");
+        for (int i = 0; i < strings.length; i++){
+            Character currentChar = '\n';
+            int j;
+            for(j = 0; j < strings[i].length() ; j++){
+                if(strings[i].charAt(j) == '}') {
+                    currentChar = strings[i].charAt(j);
+                    break;
+                }
+            }
+            if (currentChar == '}') {
+                try {
+                    strings[i].charAt(j + 1);
+                }
+                catch(Exception ex){
+                    assert true;
+                }
+            }
+        }
     }
 }
