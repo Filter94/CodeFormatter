@@ -1,0 +1,7 @@
+target/*
+*.iml
+.*
+*.log
+input.java
+output.java
+!.gitignore
