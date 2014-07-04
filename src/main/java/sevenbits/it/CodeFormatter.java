@@ -85,7 +85,8 @@ public class CodeFormatter {
                     int tabs = nestingLevel;
                     if(!operations.contains(currentChar)) {
                         for (int g = 0; g < tabs; g++)
-                            buffer += "    ";
+                            for (int k = 0; k < indentLength; k++)
+                                buffer += indentChar;
                         fileString += buffer;
                     }
                 }

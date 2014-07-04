@@ -28,7 +28,9 @@ public class CodeFormatterTest {
         CodeFormatter codeFormatter = new CodeFormatter();
 
         try {
-        codeFormatter.format(new StringInStream(javaCode), new StringOutStream(MAX_STREAM_LENGTH), formatOptions);
+            StringOutStream stringOutStream = new StringOutStream(MAX_STREAM_LENGTH);
+            codeFormatter.format(new StringInStream(javaCode),stringOutStream, formatOptions);
+            formattedCode = stringOutStream.toString();
         }
         catch (FormatterException ex) {
             throw ex;
@@ -110,7 +112,7 @@ public class CodeFormatterTest {
 
     @org.junit.Test
     public void testIndents() {
-        javaCode = "{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}";
+        javaCode = "{{{{{{{{{{{{{{}}{{{{{{}}}}}}{{}}}}}}}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
@@ -120,6 +122,38 @@ public class CodeFormatterTest {
         } catch (StreamException ex) {
             if (logger.isEnabledFor(Level.ERROR))
                 logger.error(ex.getMessage());
+        }
+        int nestingLevel = 0;
+        String buffer = "";
+        String rughtfullyInedentent = "";
+        String [] strings = formattedCode.split("\n");
+        for (int i = 0; i < strings.length; i++){
+            Character currentChar = '\n';
+            int j;
+            for(j = 0; j < strings[i].length() ; j++){
+                if(strings[i].charAt(j) != ' ' && strings[i].charAt(j) != '\n') {
+                    currentChar = strings[i].charAt(j);
+                    break;
+                }
+            }
+            if (currentChar != '\n') {
+                buffer = "";
+                rughtfullyInedentent = "";
+                int tabs = nestingLevel;
+                if (currentChar != '}')
+                    for (int g = 0; g < tabs; g++)
+                        rughtfullyInedentent += "    ";
+                else
+                    for (int g = 0; g < tabs - 1; g++)
+                        rughtfullyInedentent += "    ";
+                rughtfullyInedentent += currentChar;
+                buffer = strings[i].substring(0, rughtfullyInedentent.length());
+                assert rughtfullyInedentent.equals(buffer);
+                if(currentChar == '{')
+                    nestingLevel++;
+                if(currentChar == '}')
+                    nestingLevel--;
+            }
         }
 
         assert true;
