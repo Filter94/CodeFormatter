@@ -4,6 +4,12 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
+import sevenbits.it.CodeFormatter.CodeFormatter;
+import sevenbits.it.CodeFormatter.FormatOptions;
+import sevenbits.it.CodeFormatter.FormatterException;
+import sevenbits.it.Streams.FileInStream;
+import sevenbits.it.Streams.FileOutStream;
+import sevenbits.it.Streams.StreamException;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

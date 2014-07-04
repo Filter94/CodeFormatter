@@ -4,6 +4,12 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import sevenbits.it.CodeFormatter.CodeFormatter;
+import sevenbits.it.CodeFormatter.FormatOptions;
+import sevenbits.it.CodeFormatter.FormatterException;
+import sevenbits.it.Streams.StreamException;
+import sevenbits.it.Streams.StringInStream;
+import sevenbits.it.Streams.StringOutStream;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -24,7 +30,7 @@ public class CodeFormatterTest {
         }
     }
 
-    private void makeTest(FormatOptions formatOptions) throws FormatterException, StreamException{
+    private void makeTest(FormatOptions formatOptions) throws FormatterException, StreamException {
         CodeFormatter codeFormatter = new CodeFormatter();
 
         try {
