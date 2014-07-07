@@ -118,7 +118,7 @@ public class CodeFormatterTest {
 
     @org.junit.Test
     public void testIndents() {
-        javaCode = "{{{{{{{{{{{{{{}}{{{{{{}}}}}}{{}}}}}}}}}}}}}}";
+        javaCode = "{{{ adasd;{sadadasda;{if(a){dasdasdasd;}{{{{{{{{{}}{{asdadsadda;{{{{}}dadasdasdasd;}}}}{{}}}}}}dadadasdad;}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
@@ -133,39 +133,40 @@ public class CodeFormatterTest {
         String buffer = "";
         String rughtfullyInedentent = "";
         String [] strings = formattedCode.split("\n");
+        boolean firstInLine = true;
         for (int i = 0; i < strings.length; i++){
             Character currentChar = '\n';
             int j;
-            for(j = 0; j < strings[i].length() ; j++){
-                if(strings[i].charAt(j) != ' ' && strings[i].charAt(j) != '\n') {
-                    currentChar = strings[i].charAt(j);
-                    break;
+            firstInLine = true;
+            for(j = 0; j < strings[i].length() ; j++) {
+                if (currentChar != '\n') {
+                    if(firstInLine) {
+                        buffer = "";
+                        rughtfullyInedentent = "";
+                        int tabs = nestingLevel;
+                        if (currentChar != '}')
+                            for (int g = 0; g < tabs; g++)
+                                rughtfullyInedentent += "    ";
+                        else
+                            for (int g = 0; g < tabs - 1; g++)
+                                rughtfullyInedentent += "    ";
+                        rughtfullyInedentent += currentChar;
+                        buffer = strings[i].substring(0, rughtfullyInedentent.length());
+                        assert rughtfullyInedentent.equals(buffer);
+                        firstInLine = false;
+                    }
+                    if(currentChar == '{')
+                        nestingLevel ++;
+                    if(currentChar == '}')
+                        nestingLevel --;
                 }
-            }
-            if (currentChar != '\n') {
-                buffer = "";
-                rughtfullyInedentent = "";
-                int tabs = nestingLevel;
-                if (currentChar != '}')
-                    for (int g = 0; g < tabs; g++)
-                        rughtfullyInedentent += "    ";
-                else
-                    for (int g = 0; g < tabs - 1; g++)
-                        rughtfullyInedentent += "    ";
-                rughtfullyInedentent += currentChar;
-                buffer = strings[i].substring(0, rughtfullyInedentent.length());
-                assert rughtfullyInedentent.equals(buffer);
-                if(currentChar == '{')
-                    nestingLevel++;
-                if(currentChar == '}')
-                    nestingLevel--;
             }
         }
     }
 
     @org.junit.Test
     public void testLineFeedAfterOpening() {
-        javaCode = "{{{{{{{{{{{{{{}}{{{{{{}}}}}}{{}}}}}}}}}}}}}}";
+        javaCode = "{{{ adasd;{sadadasda;{if(a){dasdasdasd;}{{{{{{{{{}}{{asdadsadda;{{{{}}dadasdasdasd;}}}}{{}}}}}}dadadasdad;}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
