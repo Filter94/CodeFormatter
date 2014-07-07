@@ -1,5 +1,8 @@
 package sevenbits.it.CodeFormatter;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,8 +13,9 @@ import java.util.Properties;
  */
 
 public class FormatOptions {
-    int defaultIndentLength = 4;
-    Character defaultIndentChar = ' ';
+    Logger logger = Logger.getLogger(FormatOptions.class.getName());
+    static int DEFAULT_INDENT_LENGTH = 4;
+    static Character DEFAULT_INDENT_CHAR = ' ';
     int indentLength;
     Character indentChar;
 
@@ -36,12 +40,13 @@ public class FormatOptions {
             indentLength = Integer.parseInt(properties.getProperty("indentLength"));
         }
         catch (FileNotFoundException ex) {
-            System.out.print("File not found.");
+            if (logger.isEnabledFor(Level.WARN))
+                logger.warn(ex.getMessage());
             setDefaultParams();
         }
         catch (IOException ex) {
-            System.out.print("File not found.");
-            setDefaultParams();
+            if (logger.isEnabledFor(Level.WARN))
+                logger.warn(ex.getMessage());
         }
     }
 
@@ -51,6 +56,7 @@ public class FormatOptions {
      */
 
     public int getIndentSize(){
+
         return indentLength;
     }
 
@@ -60,6 +66,7 @@ public class FormatOptions {
      */
 
     public Character getIndent(){
+
         return indentChar;
     }
 
@@ -68,7 +75,9 @@ public class FormatOptions {
      */
 
     private void setDefaultParams(){
-        indentLength = defaultIndentLength;
-        indentChar = defaultIndentChar;
+        indentLength = DEFAULT_INDENT_LENGTH;
+        indentChar = DEFAULT_INDENT_CHAR;
+        if (logger.isEnabledFor(Level.WARN))
+            logger.warn("Default parameters for formatter.");
     }
 }

@@ -20,16 +20,16 @@ import java.io.FileNotFoundException;
 
 public class  Main{
     static Logger logger = Logger.getLogger(Main.class.getName());
+    static String DEFAULT_LOG4J_PROPERTIES = "log4j.properties";
+    static String DEFAULT_FORMATTER_PROPERTIES = "formatter.properties";
     /**
      * Formates java code in given file and writes it into another
      * @param args - args[0] - name of file with unformatted java code; args[1] - name of file to which will be written formatted java code
      */
 
     public static void main(String[] args) {
-
-        String defaultLog4jProperties = "log4j.properties";
         try {
-            PropertyConfigurator.configure(new FileInputStream(defaultLog4jProperties));
+            PropertyConfigurator.configure(new FileInputStream(DEFAULT_LOG4J_PROPERTIES));
         }
         catch(FileNotFoundException ex){
             BasicConfigurator.configure();
@@ -39,9 +39,8 @@ public class  Main{
         if (args.length > 1) {
             FileInStream fis;
             FileOutStream fos;
-            String defaultFormatterProperties = "formatter.properties";
             CodeFormatter codeFormatter = new CodeFormatter();
-            FormatOptions formatOptions = new FormatOptions(defaultFormatterProperties);
+            FormatOptions formatOptions = new FormatOptions(DEFAULT_FORMATTER_PROPERTIES);
             try {
                 fis = new FileInStream(args[0]);
                 fos = new FileOutStream(args[1]);
