@@ -141,7 +141,6 @@ public class CodeFormatterTest {
             for(j = 0; j < strings[i].length() ; j++) {
                 if (currentChar != '\n') {
                     if(firstInLine) {
-                        buffer = "";
                         rughtfullyInedentent = "";
                         int tabs = nestingLevel;
                         if (currentChar != '}')

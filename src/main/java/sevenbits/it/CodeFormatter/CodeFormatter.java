@@ -19,23 +19,6 @@ public class CodeFormatter {
     Character indentChar;
 
     /**
-     * Writes string into stream
-     * @param outStream - OutStream to which the String will be written
-     * @param str - String that will be written into stream
-     * @throws sevenbits.it.Streams.StreamException - throws when OutStream is not available or corrupted
-     */
-
-    private void writeString(OutStream outStream, String str) throws StreamException {
-        try {
-            for(int i = 0; i < str.length(); i++)
-                outStream.writeSymbol(str.charAt(i));
-        }
-        catch(StreamException ex){
-            throw ex;
-        }
-    }
-
-    /**
      * @param inStream - stream with unformatted java code
      * @param outStream - stream where formatted java code will be written
      * @param options - contains options for formatter
@@ -61,7 +44,7 @@ public class CodeFormatter {
         operations.add('!');
         String buffer;
         int nestingLevel = 0;
-        int forCount = 0;
+        boolean thereWasOperation = false;
         int mode = 0;  // 0- not code 1 = "//" - type comment 2 - "/**/" - type comment 3 = string 4- char 5- \
         boolean endOfStream = true;
         try{
@@ -112,7 +95,6 @@ public class CodeFormatter {
                             try{
                                 fileString += buffer;
                                 writeString(outStream, fileString.substring(1));
-                                fileString = "";
                             }
                             catch(StreamException ex){
                                 System.out.print("log");
@@ -126,9 +108,7 @@ public class CodeFormatter {
                             break;
                         }
                         case '{': {
-                            buffer = "{\n";
-                            nestingLevel++;
-                            fileString += buffer;
+                            processOpeningCurlyBracket(outStream);
                             break;
                         }
                         case '"':{
@@ -168,7 +148,7 @@ public class CodeFormatter {
                         case '&':
                         case '|':
                         case '+': {
-                            if (operations.contains(fileString.charAt(fileString.length() - 2))) {
+                            if (thereWasOperation) {
                                 fileString = fileString.substring(0, fileString.length() - 1);
                             }
                             if (previousChar != ' ' && !operations.contains(previousChar))
@@ -176,37 +156,23 @@ public class CodeFormatter {
                             buffer += currentChar;
                             buffer += " ";
                             fileString += buffer;
+                            thereWasOperation = true;
                             break;
                         }
                         case '(': {
-                            if (previousChar != ' ')
-                                buffer += " (";
-                            else
-                                buffer += "(";
-                            fileString += buffer;
-                            if (fileString.substring(fileString.length() - 6).equals(" for (")) {
-                                forCount = 2;   // 2 ';' without \n after for
-                            }
+                            processOpeningBracket(nestingLevel, currentChar, previousChar, outStream);
                             break;
                         }
                         case ')': {
-                            buffer += ") ";
-                            fileString += buffer;
+                            processClosingBracket(outStream);
                             break;
                         }
                         case ';': {
-                            buffer = ";";
-                            if (forCount == 0) {
-                                buffer += "\n";
-                            } else
-                                forCount--;
-                            fileString += buffer;
+                            processSemicolon(outStream);
                             break;
                         }
                         default: {
-                            if (currentChar != ' ' && currentChar != '\n') {
-                                fileString += currentChar;
-                            }
+                            processSymbol(outStream, currentChar);
                             break;
                         }
 
@@ -282,4 +248,49 @@ public class CodeFormatter {
                 logger.fatal(ex.getMessage());
         }
     }
+
+    /**
+     * Writes string into stream
+     * @param outStream - OutStream to which the String will be written
+     * @param str - String that will be written into stream
+     * @throws sevenbits.it.Streams.StreamException - throws when OutStream is not available or corrupted
+     */
+
+    private void writeString(OutStream outStream, String str) throws StreamException {
+        try {
+            for(int i = 0; i < str.length(); i++)
+                outStream.writeSymbol(str.charAt(i));
+        }
+        catch(StreamException ex){
+            throw ex;
+        }
+    }
+
+    private void processOpeningBracket(int nestingLevel, Character currentChar, Character previousChar, OutStream outStream) throws StreamException{
+        String buffer;
+        if (previousChar != ' ')
+            buffer = " (";
+        else
+            buffer = "(";
+        writeString(outStream, buffer);
+    }
+
+    private void processClosingBracket(OutStream outStream) throws StreamException{
+        writeString(outStream,  ") ");
+    }
+
+    private void processSemicolon(OutStream outStream) throws StreamException{
+        writeString(outStream,  ";\n");
+    }
+
+    private void processSymbol(OutStream outStream, Character currentChar) throws StreamException{
+        if (currentChar != ' ' && currentChar != '\n') {
+            outStream.writeSymbol(currentChar);
+        }
+    }
+
+    private void processOpeningCurlyBracket(OutStream outStream) throws StreamException{
+        writeString(outStream, "{\n");
+    }
 }
+
