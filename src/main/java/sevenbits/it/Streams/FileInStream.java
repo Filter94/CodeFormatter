@@ -1,8 +1,8 @@
 package sevenbits.it.Streams;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 
 /**
  * Used to represent file as input stream
@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class FileInStream implements InStream {
 
-    private FileInputStream fileInputStream;
+    private ObjectInputStream objectInputStream;
 
     /**
      * @param str - Name of file which will be opened as stream
@@ -19,16 +19,16 @@ public class FileInStream implements InStream {
 
     public FileInStream(String str) throws StreamException {
         try {
-            fileInputStream = new FileInputStream(str);
+            objectInputStream = new ObjectInputStream(new FileInputStream(str));
         }
-        catch(FileNotFoundException ex){
+        catch(IOException ex){
             throw new StreamException(ex.getMessage(), ex.getCause());
         }
     }
 
     public boolean isEnd() throws StreamException{
         try {
-            return fileInputStream.available() < 1;
+            return objectInputStream.available() < 1;
         }
         catch(IOException ex)            {
             throw new StreamException(ex.getMessage(), ex.getCause());
@@ -37,7 +37,7 @@ public class FileInStream implements InStream {
 
     public char readSymbol() throws StreamException{
         try {
-            return (char)fileInputStream.read();
+            return objectInputStream.readChar();
         }
         catch(IOException ex)            {
             throw new StreamException(ex.getMessage(), ex.getCause());
@@ -46,7 +46,7 @@ public class FileInStream implements InStream {
 
     public void close() throws StreamException{
         try {
-            fileInputStream.close();
+            objectInputStream.close();
         }
         catch(IOException ex){
             throw new StreamException(ex.getMessage(), ex.getCause());
