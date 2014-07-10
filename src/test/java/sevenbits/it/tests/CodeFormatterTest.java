@@ -14,36 +14,31 @@ import sevenbits.it.Streams.StringOutStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
+/**
+ * Tests formatter
+ */
+
 public class CodeFormatterTest {
-    int MAX_STREAM_LENGTH = 8192;
-    String javaCode;
-    String formattedCode;
-    Logger logger = Logger.getLogger(CodeFormatterTest.class.getName());
+    private static final int MAX_STREAM_LENGTH = 8192;
+    private String javaCode;
+    private String formattedCode;
+    private final Logger logger = Logger.getLogger(CodeFormatterTest.class.getName());
 
     static {
         String defaultLog4jProperties = "log4j.properties";
         try {
             PropertyConfigurator.configure(new FileInputStream(defaultLog4jProperties));
-        }
-        catch( FileNotFoundException ex ) {
+        } catch (FileNotFoundException ex) {
             BasicConfigurator.configure();
         }
     }
 
-    private void makeTest(FormatOptions formatOptions) throws FormatterException, StreamException {
+    private void makeTest(final FormatOptions formatOptions) throws StreamException, FormatterException {
         CodeFormatter codeFormatter = new CodeFormatter();
 
-        try {
             StringOutStream stringOutStream = new StringOutStream(MAX_STREAM_LENGTH);
-            codeFormatter.format(new StringInStream(javaCode),stringOutStream, formatOptions);
+            codeFormatter.format(new StringInStream(javaCode), stringOutStream, formatOptions);
             formattedCode = stringOutStream.toString();
-        }
-        catch (FormatterException ex) {
-            throw ex;
-        }
-        catch (StreamException ex) {
-            throw ex;
-        }
     }
 
     @org.junit.Test
@@ -52,52 +47,53 @@ public class CodeFormatterTest {
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
-                assert false;
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
-                logger.error(ex.getMessage());
+            }
             assert false;
         }
         assert true;
     }
 
     @org.junit.Test
-    public void testLessClosingDelimeters() throws Exception {
+    public void testLessClosingDelimiters() throws Exception {
         javaCode = "{{{{{{{{{{{{{{{{{{{}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
         boolean testPassed = false;
         try {
             makeTest(formatOptions);
         } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
+            }
             testPassed = true;
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
+            }
         }
-        assert testPassed == true;
+        assert testPassed;
     }
 
     @org.junit.Test
-    public void testMoreClosingDelimeters() {
+    public void testMoreClosingDelimiters() {
         javaCode = "{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
         boolean testPassed = false;
         try {
             makeTest(formatOptions);
         } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
+            }
             testPassed = true;
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
+            }
         }
-        assert testPassed == true;
+        assert testPassed;
     }
 
     @org.junit.Test
@@ -106,12 +102,11 @@ public class CodeFormatterTest {
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
-                logger.error(ex.getMessage());
+            }
+            assert false;
         }
         assert true;
     }
@@ -122,42 +117,43 @@ public class CodeFormatterTest {
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
-                logger.error(ex.getMessage());
+            }
+            assert false;
         }
         int nestingLevel = 0;
-        String buffer = "";
-        String rughtfullyInedentent = "";
+        String buffer;
+        String rughtfullyInedentent;
         String [] strings = formattedCode.split("\n");
-        boolean firstInLine = true;
-        for (int i = 0; i < strings.length; i++){
+        boolean firstInLine;
+        for (String currentString: strings) {
             Character currentChar = '\n';
             int j;
             firstInLine = true;
-            for(j = 0; j < strings[i].length() ; j++) {
-                if (currentChar != '\n') {
-                    if(firstInLine) {
-                        rughtfullyInedentent = "";
-                        int tabs = nestingLevel;
-                        if (currentChar != '}')
-                            for (int g = 0; g < tabs; g++)
-                                rughtfullyInedentent += "    ";
-                        else
-                            for (int g = 0; g < tabs - 1; g++)
-                                rughtfullyInedentent += "    ";
-                        rughtfullyInedentent += currentChar;
-                        buffer = strings[i].substring(0, rughtfullyInedentent.length());
-                        assert rughtfullyInedentent.equals(buffer);
-                        firstInLine = false;
+            for (j = 0; j < currentString.length() ; j++) {
+                if (firstInLine) {
+                    rughtfullyInedentent = "";
+                    if (currentChar != '}') {
+                        for (int g = 0; g < nestingLevel; g++) {
+                            rughtfullyInedentent += "    ";
+                        }
+                    } else {
+                        for (int g = 0; g < nestingLevel - 1; g++) {
+                            rughtfullyInedentent += "    ";
+                        }
                     }
-                    if(currentChar == '{')
-                        nestingLevel ++;
-                    if(currentChar == '}')
-                        nestingLevel --;
+                    rughtfullyInedentent += currentChar;
+                    buffer = currentString.substring(0, rughtfullyInedentent.length());
+                    assert rughtfullyInedentent.equals(buffer);
+                    firstInLine = false;
+                }
+                if (currentChar == '{') {
+                    nestingLevel++;
+                }
+                if (currentChar == '}') {
+                    nestingLevel--;
                 }
             }
         }
@@ -169,28 +165,26 @@ public class CodeFormatterTest {
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
-                logger.error(ex.getMessage());
+            }
+            assert false;
         }
         String [] strings = formattedCode.split("\n");
-        for (int i = 0; i < strings.length; i++){
+        for (String currentString: strings) {
             Character currentChar = '\n';
             int j;
-            for(j = 0; j < strings[i].length() ; j++){
-                if(strings[i].charAt(j) == '{') {
-                    currentChar = strings[i].charAt(j);
+            for (j = 0; j < currentString.length() ; j++) {
+                if (currentString.charAt(j) == '{') {
+                    currentChar = currentString.charAt(j);
                     break;
                 }
             }
             if (currentChar == '{') {
                 try {
-                    strings[i].charAt(j + 1);
-                }
-                catch(Exception ex){
+                    currentString.charAt(j + 1);
+                } catch (Exception ex) {
                     assert true;
                 }
             }
@@ -203,28 +197,26 @@ public class CodeFormatterTest {
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
-                logger.error(ex.getMessage());
+            }
+            assert false;
         }
         String [] strings = formattedCode.split("\n");
-        for (int i = 0; i < strings.length; i++){
+        for (String currentString: strings) {
             Character currentChar = '\n';
             int j;
-            for(j = 0; j < strings[i].length() ; j++){
-                if(strings[i].charAt(j) == '}') {
-                    currentChar = strings[i].charAt(j);
+            for (j = 0; j < currentString.length() ; j++) {
+                if (currentString.charAt(j) == '}') {
+                    currentChar = currentString.charAt(j);
                     break;
                 }
             }
             if (currentChar == '}') {
                 try {
-                    strings[i].charAt(j + 1);
-                }
-                catch(Exception ex){
+                    currentString.charAt(j + 1);
+                } catch (Exception ex) {
                     assert true;
                 }
             }
@@ -237,28 +229,26 @@ public class CodeFormatterTest {
         FormatOptions formatOptions = new FormatOptions();
         try {
             makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.error(ex.getMessage());
-        } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.ERROR))
-                logger.error(ex.getMessage());
+            }
+            assert false;
         }
         String [] strings = formattedCode.split("\n");
-        for (int i = 0; i < strings.length; i++){
+        for (String currentString: strings) {
             Character currentChar = '\n';
             int j;
-            for(j = 0; j < strings[i].length() ; j++){
-                if(strings[i].charAt(j) == ';') {
-                    currentChar = strings[i].charAt(j);
+            for (j = 0; j < currentString.length() ; j++) {
+                if (currentString.charAt(j) == ';') {
+                    currentChar = currentString.charAt(j);
                     break;
                 }
             }
             if (currentChar == ';') {
                 try {
-                    strings[i].charAt(j + 1);
-                }
-                catch(Exception ex){
+                    currentString.charAt(j + 1);
+                } catch (Exception ex) {
                     assert true;
                 }
             }

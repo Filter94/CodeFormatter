@@ -14,16 +14,26 @@ import java.util.TreeSet;
  */
 
 public class CodeFormatter {
-    Logger logger = Logger.getLogger(CodeFormatter.class.getName());
-    int indentLength;
-    Character indentChar;
+    private final Logger  logger = Logger.getLogger(CodeFormatter.class.getName());
+    private int indentLength;
+    private Character indentChar;
+    private static final Set<Character> OPERATIONS = new TreeSet<>();
+    static {
+        OPERATIONS.add('+');
+        OPERATIONS.add('-');
+        OPERATIONS.add('=');
+        OPERATIONS.add('*');
+        OPERATIONS.add('&');
+        OPERATIONS.add('|');
+        OPERATIONS.add('!');
+    }
 
-    private final static int MODE_REGULAR = 0;
-    private final static int MODE_DOUBLE_SLASH = 1;   // // - comment
-    private final static int MODE_SLASH_ASTERISK = 2;
-    private final static int MODE_STRING = 3;
-    private final static int MODE_CHAR = 4;
-    private final static int MODE_BACKSLASH = 5;
+    private static final int MODE_REGULAR = 0;
+    private static final int MODE_DOUBLE_SLASH = 1;   // // - comment
+    private static final int MODE_SLASH_ASTERISK = 2;
+    private static final int MODE_STRING = 3;
+    private static final int MODE_CHAR = 4;
+    private static final int MODE_BACKSLASH = 5;
 
     /**
      * @param inStream - stream with unformatted java code
@@ -33,61 +43,65 @@ public class CodeFormatter {
      * @throws StreamException - if there is problems with streams
      */
 
-    public void format(InStream inStream, OutStream outStream, FormatOptions options) throws FormatterException, StreamException {
+    public void format(final InStream inStream, final OutStream outStream,
+                       final FormatOptions options) throws FormatterException, StreamException {
         indentLength = options.getIndentSize();
         indentChar = options.getIndent();
 
-        String fileString = "";
         Character currentChar = 'a';
         Character previousChar;
-        Set<Character> operations = new TreeSet<>();
-        operations.add('+');
-        operations.add('-');
-        operations.add('=');
-        operations.add('/');
-        operations.add('*');
-        operations.add('&');
-        operations.add('|');
-        operations.add('!');
+
         String buffer;
         int nestingLevel = 0;
-        boolean thereWasOperation = false;
-        boolean waitForClosingCurlyBracket = false;
         int mode = 0;
         boolean endOfStream = true;
-        try{
+        boolean newLine = true;
+        try {
             endOfStream = inStream.isEnd();
-        } catch(StreamException ex){
-            if (logger.isEnabledFor(Level.FATAL))
+        } catch (StreamException ex) {
+            if (logger.isEnabledFor(Level.FATAL)) {
                 logger.fatal(ex.getMessage());
-        }
-        while(!endOfStream){
-            if (logger.isEnabledFor(Level.DEBUG))
-                logger.debug("New symbol.");
-            buffer = "";
-            try{
-                currentChar = inStream.readSymbol();
-            } catch(StreamException ex){
-                if (logger.isEnabledFor(Level.FATAL))
-                    logger.fatal(ex.getMessage());
             }
-            previousChar = fileString.charAt(fileString.length() - 1);
+        }
+        while (!endOfStream) {
+            if (logger.isEnabledFor(Level.DEBUG)) {
+                logger.debug("New symbol.");
+            }
+            previousChar = currentChar;
+            currentChar = inStream.readSymbol();
+            if (previousChar == '/' && (currentChar != '/' && currentChar != '*')) {
+                outStream.writeSymbol(' ');
+                previousChar = ' ';
+            }
             switch (mode) {
                 case MODE_REGULAR: {
+                if (previousChar == '\n') {
+                    newLine = true;
+                }
                 if (previousChar == '\n' && currentChar != ' ') {
-                    int tabs = nestingLevel - 1;
-                    waitForClosingCurlyBracket = true;
-                    if(!operations.contains(currentChar)) {
-                        for (int g = 0; g < tabs; g++)
-                            for (int k = 0; k < indentLength; k++)
-                                buffer += indentChar;
-                        fileString += buffer;
+                    int indents = nestingLevel - 1;
+                    if (!OPERATIONS.contains(currentChar)) {
+                        writeNIndents(outStream, indents);
+                    }
+                    if (currentChar != '}') {
+                        writeNIndents(outStream, 1);
+                    }
+                    if (newLine && currentChar != ' ') {
+                        newLine = false;
                     }
                 }
                     switch (currentChar) {
                         case '\r':break;
-                        case '}': {
+                        case '}':  {
+                            if (nestingLevel != 0) {
+                                nestingLevel--;
+                            } else {
+                                String message = "Delimiters does not match";
+                                NotEnoughBracketsException ex = new NotEnoughBracketsException();
+                                throw new NotEnoughBracketsException(message , ex);
+                            }
                             processClosingCurlyBracket(outStream, nestingLevel);
+                            currentChar = '\n';
                             break;
                         }
                         case ' ': {
@@ -95,7 +109,9 @@ public class CodeFormatter {
                             break;
                         }
                         case '{': {
+                            nestingLevel++;
                             processOpeningCurlyBracket(outStream);
+                            currentChar = '\n';
                             break;
                         }
                         case '"':
@@ -104,34 +120,39 @@ public class CodeFormatter {
                             mode = processCommentSymbol(outStream, currentChar, previousChar);
                         }
                             break;
-                        case '/':
-                        case '*':
-                            if (fileString.charAt(fileString.length() - 2) == '/') {
-                                if (currentChar == '*')
-                                    mode = MODE_SLASH_ASTERISK;
-                                    fileString = fileString.substring(0, fileString.length() - 1);
-                                if (currentChar == '/') {
-                                    fileString = fileString.substring(0, fileString.length() - 3);
-                                    fileString += "    /";
-                                    mode = MODE_DOUBLE_SLASH;
+                        case '/': {
+                            buffer = "";
+                            if (previousChar != '/') {
+                                if (previousChar != ' ') {
+                                    buffer += ' ';
                                 }
-                                fileString += currentChar;
-                                break;
+                            } else {
+                                mode = MODE_DOUBLE_SLASH;
                             }
+                            buffer += currentChar;
+                            writeString(outStream, buffer);
+                            break;
+                        }
+                        case '*': {
+                            buffer = "";
+                            if (previousChar == '/') {
+                                mode = MODE_SLASH_ASTERISK;
+                            } else {
+                                if (previousChar != ' ') {
+                                    buffer += " ";
+                                }
+                            }
+                            buffer += currentChar;
+                            writeString(outStream, buffer);
+                            break;
+                        }
                         case '=':
                         case '-':
                         case '&':
                         case '|':
                         case '+': {
-                            if (thereWasOperation) {
-                                fileString = fileString.substring(0, fileString.length() - 1);
-                            }
-                            if (previousChar != ' ' && !operations.contains(previousChar))
-                                buffer += " ";
-                            buffer += currentChar;
-                            buffer += " ";
-                            fileString += buffer;
-                            thereWasOperation = true;
+                            buffer = " " + currentChar + " ";
+                            writeString(outStream,  buffer);
                             break;
                         }
                         case '(': {
@@ -144,81 +165,77 @@ public class CodeFormatter {
                         }
                         case ';': {
                             processSemicolon(outStream);
+                            currentChar = '\n';
                             break;
                         }
                         default: {
-                            if(waitForClosingCurlyBracket) {
-                                writeIndent(outStream);
-                                waitForClosingCurlyBracket=false;
-                            }
                             processSymbol(outStream, currentChar);
                             break;
                         }
-
                     }
                     break;
                 }
                 case MODE_DOUBLE_SLASH:
-                    if(currentChar == '\n') {
-                        if (logger.isEnabledFor(Level.DEBUG))
+                    if (currentChar == '\n') {
+                        if (logger.isEnabledFor(Level.DEBUG)) {
                             logger.debug("// comment ends");
+                        }
                         mode = MODE_REGULAR;
                     }
                 case MODE_SLASH_ASTERISK:
-                    if(currentChar == '/' && previousChar == '*'  && mode == 2) {
-                        if (logger.isEnabledFor(Level.DEBUG))
+                    if (currentChar == '/' && previousChar == '*'  && mode == MODE_SLASH_ASTERISK) {
+                        if (logger.isEnabledFor(Level.DEBUG)) {
                             logger.debug("/* comment ends");
+                        }
                         mode = MODE_REGULAR;
                     }
                 case MODE_STRING:
-                    if(currentChar == '"' && mode == 3) {
-                        if (logger.isEnabledFor(Level.DEBUG))
+                    if (currentChar == '"' && mode == MODE_STRING) {
+                        if (logger.isEnabledFor(Level.DEBUG)) {
                             logger.debug("string ends");
+                        }
                         mode = MODE_REGULAR;
                     }
                 case MODE_CHAR:
-                    if(mode == 4 && (currentChar == '\'')) {
-                        if (logger.isEnabledFor(Level.DEBUG))
+                    if (mode == MODE_CHAR && (currentChar == '\'')) {
+                        if (logger.isEnabledFor(Level.DEBUG)) {
                             logger.debug("symbol ends");
+                        }
                         mode = MODE_REGULAR;
                     }
                 case MODE_BACKSLASH:
-                    if(mode == 5) {
-                        if (logger.isEnabledFor(Level.DEBUG))
+                    if (mode == MODE_BACKSLASH) {
+                        if (logger.isEnabledFor(Level.DEBUG)) {
                             logger.debug("backslash");
+                        }
                         mode = MODE_REGULAR;
                     }
                 default:
                     outStream.writeSymbol(currentChar);
-                    if(mode == 5){
+                    if (mode == MODE_BACKSLASH) {
                         currentChar = 'a';  // annuls meaning of current symbol
                     }
                     break;
                 }
-            if (logger.isEnabledFor(Level.DEBUG))
+            if (logger.isEnabledFor(Level.DEBUG)) {
                 logger.debug("Symbol parsed.");
-            try{
+            }
+            try {
                 endOfStream = inStream.isEnd();
-            } catch(StreamException ex){
-                if (logger.isEnabledFor(Level.FATAL))
+            } catch (StreamException ex) {
+                if (logger.isEnabledFor(Level.FATAL)) {
                     logger.fatal(ex.getMessage());
+                }
+                throw ex;
             }
         }
-        if(nestingLevel != 0) {
+        if (nestingLevel != 0) {
             String message = "Delimiters does not match";
             Throwable ex = new Exception(message);
-            if (logger.isEnabledFor(Level.ERROR))
+            if (logger.isEnabledFor(Level.ERROR)) {
                 logger.fatal(ex.getMessage());
+            }
             throw new NotEnoughBracketsException(ex.getMessage(), ex.getCause());
-        }
-        try {
-            inStream.close();
-            writeString(outStream, fileString.substring(1));
-            outStream.close();
-        }
-        catch(StreamException ex){
-            if (logger.isEnabledFor(Level.FATAL))
-                logger.fatal(ex.getMessage());
         }
     }
 
@@ -229,82 +246,80 @@ public class CodeFormatter {
      * @throws sevenbits.it.Streams.StreamException - throws when OutStream is not available or corrupted
      */
 
-    private void writeString(OutStream outStream, String str) throws StreamException {
-        for(int i = 0; i < str.length(); i++)
-            outStream.writeSymbol(str.charAt(i));
+    private void writeString(final OutStream outStream, final String str) throws StreamException {
+            for (int i = 0; i < str.length(); i++) {
+                outStream.writeSymbol(str.charAt(i));
+            }
     }
 
-    private void processOpeningBracket(Character previousChar, OutStream outStream) throws StreamException{
+    private void processOpeningBracket(final Character previousChar, final OutStream outStream) throws StreamException {
         String buffer;
-        if (previousChar != ' ')
+        if (previousChar != ' ') {
             buffer = " (";
-        else
+        } else {
             buffer = "(";
+        }
         writeString(outStream, buffer);
     }
 
-    private void processClosingBracket(OutStream outStream) throws StreamException{
+    private void processClosingBracket(final OutStream outStream) throws StreamException {
         writeString(outStream,  ") ");
     }
 
-    private void processSemicolon(OutStream outStream) throws StreamException{
+    private void processSemicolon(final OutStream outStream) throws StreamException {
         writeString(outStream,  ";\n");
     }
 
-    private void processSymbol(OutStream outStream, Character currentChar) throws StreamException{
+    private void processSymbol(final OutStream outStream, final Character currentChar) throws StreamException {
         if (currentChar != ' ' && currentChar != '\n') {
             outStream.writeSymbol(currentChar);
         }
     }
 
-    private void processOpeningCurlyBracket(OutStream outStream) throws StreamException{
+    private void processOpeningCurlyBracket(final OutStream outStream) throws StreamException {
         writeString(outStream, "{\n");
     }
 
-    private void processClosingCurlyBracket(OutStream outStream, int nestingLevel ) throws StreamException, NotEnoughBracketsException{
-        if(nestingLevel != 0)
-            nestingLevel--;
-        else{
-            String message = "Delimiters does not match";
-            NotEnoughBracketsException ex = new NotEnoughBracketsException();
-            throw new NotEnoughBracketsException(message , ex);
-        }
+    private void processClosingCurlyBracket(final OutStream outStream, final int nestingLevel) {
         String buffer;
         buffer = "}\n";
         if (nestingLevel == 0) {
             buffer += '\n';
         }
-        try{
-            writeString(outStream,buffer);
-        }
-        catch(StreamException ex){
+        try {
+            writeString(outStream, buffer);
+        } catch (StreamException ex) {
             System.out.print("log");
         }
     }
 
-    private void processSpaces(OutStream outStream, Character previousChar) throws StreamException{
-        if (previousChar != ' ' && previousChar != '\n')
+    private void processSpaces(final OutStream outStream, final Character previousChar) throws StreamException {
+        if (previousChar != ' ' && previousChar != '\n') {
             outStream.writeSymbol(' ');
+        }
     }
 
-    private int processCommentSymbol(OutStream outStream,Character currentChar, Character previousChar) throws StreamException {
+    private int processCommentSymbol(final OutStream outStream, final Character currentChar,
+                                     final  Character previousChar) throws StreamException {
         outStream.writeSymbol(currentChar);
-        if (previousChar != '\\' && previousChar != '\'')
-            switch (currentChar) {
-                case '"':
-                    return MODE_STRING;
-                case '\'':
-                    return MODE_CHAR;
-                case '\\':
-                    return MODE_BACKSLASH;
-            }
-        return MODE_REGULAR;
+        switch (currentChar) {
+            case '"':
+                return MODE_STRING;
+            case '\'':
+                return MODE_CHAR;
+            case '\\':
+                return MODE_BACKSLASH;
+            default: return MODE_REGULAR;
+        }
     }
 
-    private void writeIndent(OutStream outStream)throws StreamException{
+    private void writeNIndents(final OutStream outStream, final int n)throws StreamException {
         String buffer = "";
-        for (int k = 0; k < indentLength; k++)
-            buffer += indentChar;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < indentLength; j++) {
+                buffer += indentChar;
+            }
+        }
         writeString(outStream, buffer);
     }
 }

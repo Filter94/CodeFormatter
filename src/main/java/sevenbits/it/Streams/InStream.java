@@ -12,7 +12,7 @@ public interface InStream {
      * @throws StreamException - if stream is not available
      */
 
-    public boolean isEnd() throws StreamException;
+    boolean isEnd() throws StreamException;
 
     /**
      * Reads symbol from stream
@@ -20,12 +20,12 @@ public interface InStream {
      * @throws StreamException - if stream is not available
      */
 
-    public char readSymbol() throws StreamException;
+    char readSymbol() throws StreamException;
 
     /**
      * Closes stream
      * @throws StreamException - if stream is not available
      */
 
-    public void close() throws StreamException;
+    void close() throws StreamException;
 }

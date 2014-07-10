@@ -13,17 +13,17 @@ import java.util.Properties;
  */
 
 public class FormatOptions {
-    Logger logger = Logger.getLogger(FormatOptions.class.getName());
-    static int DEFAULT_INDENT_LENGTH = 4;
-    static Character DEFAULT_INDENT_CHAR = ' ';
-    int indentLength;
-    Character indentChar;
+    private final Logger logger = Logger.getLogger(FormatOptions.class.getName());
+    private static final int DEFAULT_INDENT_LENGTH = 4;
+    private static final Character DEFAULT_INDENT_CHAR = ' ';
+    private int indentLength;
+    private Character indentChar;
 
     /**
      * Initializes options with default values
      */
 
-    public FormatOptions(){
+    public FormatOptions() {
         setDefaultParams();
     }
 
@@ -32,21 +32,21 @@ public class FormatOptions {
      * @param configName nave of config file
      */
 
-    public FormatOptions(String configName){
+    public FormatOptions(final String configName) {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream(configName));
             indentChar = properties.getProperty("indentChar").charAt(1);
             indentLength = Integer.parseInt(properties.getProperty("indentLength"));
-        }
-        catch (FileNotFoundException ex) {
-            if (logger.isEnabledFor(Level.WARN))
+        } catch (FileNotFoundException ex) {
+            if (logger.isEnabledFor(Level.WARN)) {
                 logger.warn(ex.getMessage());
+            }
             setDefaultParams();
-        }
-        catch (IOException ex) {
-            if (logger.isEnabledFor(Level.WARN))
+        } catch (IOException ex) {
+            if (logger.isEnabledFor(Level.WARN)) {
                 logger.warn(ex.getMessage());
+            }
         }
     }
 
@@ -55,8 +55,7 @@ public class FormatOptions {
      * @return quantity of indents in options
      */
 
-    public int getIndentSize(){
-
+    public int getIndentSize() {
         return indentLength;
     }
 
@@ -65,8 +64,7 @@ public class FormatOptions {
      * @return indent symbol in options
      */
 
-    public Character getIndent(){
-
+    public Character getIndent() {
         return indentChar;
     }
 
@@ -74,10 +72,11 @@ public class FormatOptions {
      * Sets default values for options
      */
 
-    private void setDefaultParams(){
+    private void setDefaultParams() {
         indentLength = DEFAULT_INDENT_LENGTH;
         indentChar = DEFAULT_INDENT_CHAR;
-        if (logger.isEnabledFor(Level.WARN))
+        if (logger.isEnabledFor(Level.WARN)) {
             logger.warn("Default parameters for formatter.");
+        }
     }
 }

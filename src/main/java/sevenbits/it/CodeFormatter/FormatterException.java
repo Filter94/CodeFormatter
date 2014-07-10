@@ -6,7 +6,7 @@ package sevenbits.it.CodeFormatter;
 
 public class FormatterException extends Exception {
     FormatterException(){}
-    FormatterException(String message, Throwable cause){
+    FormatterException(final String message, final  Throwable cause) {
         super(message, cause);
         }
 }

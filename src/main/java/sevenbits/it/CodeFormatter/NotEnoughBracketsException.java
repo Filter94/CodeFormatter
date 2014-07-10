@@ -4,9 +4,9 @@ package sevenbits.it.CodeFormatter;
  * Raises when there is brackets mismatch
  */
 
-public class NotEnoughBracketsException extends FormatterException {
-    NotEnoughBracketsException(){};
-    NotEnoughBracketsException(String message, Throwable cause){
+class NotEnoughBracketsException extends FormatterException {
+    NotEnoughBracketsException(){}
+    NotEnoughBracketsException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

@@ -5,7 +5,7 @@ package sevenbits.it.Streams;
  */
 
 public class StreamException extends Exception {
-    StreamException(String message, Throwable cause){
+    StreamException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

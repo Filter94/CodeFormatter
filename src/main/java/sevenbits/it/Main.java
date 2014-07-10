@@ -6,10 +6,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
 import sevenbits.it.CodeFormatter.CodeFormatter;
 import sevenbits.it.CodeFormatter.FormatOptions;
-import sevenbits.it.CodeFormatter.FormatterException;
 import sevenbits.it.Streams.FileInStream;
 import sevenbits.it.Streams.FileOutStream;
-import sevenbits.it.Streams.StreamException;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,23 +16,26 @@ import java.io.FileNotFoundException;
  * Formates compiled java code
  */
 
-public class  Main{
-    static Logger logger = Logger.getLogger(Main.class.getName());
-    static String DEFAULT_LOG4J_PROPERTIES = "log4j.properties";
-    static String DEFAULT_FORMATTER_PROPERTIES = "formatter.properties";
+final class Main {
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final String DEFAULT_LOG4J_PROPERTIES = "log4j.properties";
+    private static final String DEFAULT_FORMATTER_PROPERTIES = "formatter.properties";
+
+    private Main(){}
+
     /**
      * Formates java code in given file and writes it into another
      * @param args - args[0] - name of file with unformatted java code; args[1] - name of file to which will be written formatted java code
      */
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         try {
             PropertyConfigurator.configure(new FileInputStream(DEFAULT_LOG4J_PROPERTIES));
-        }
-        catch(FileNotFoundException ex){
+        } catch (FileNotFoundException ex) {
             BasicConfigurator.configure();
-            if (logger.isEnabledFor(Level.WARN))
-                logger.warn("Loaded default logger options.");
+            if (LOGGER.isEnabledFor(Level.WARN)) {
+                LOGGER.warn("Loaded default logger options.");
+            }
         }
         if (args.length > 1) {
             FileInStream fis;
@@ -45,17 +46,14 @@ public class  Main{
                 fis = new FileInStream(args[0]);
                 fos = new FileOutStream(args[1]);
                 codeFormatter.format(fis, fos, formatOptions);
-            } catch (FormatterException ex) {
-                if (logger.isEnabledFor(Level.ERROR)) {
-                    logger.error(ex.getMessage());
+            } catch (Exception ex) {
+                if (LOGGER.isEnabledFor(Level.ERROR)) {
+                    LOGGER.error(ex.getMessage());
                 }
-            } catch (StreamException ex) {
-                if (logger.isEnabledFor(Level.ERROR))
-                    logger.error(ex.getMessage());
+                assert false;
             }
-        }
-        else{
-            logger.error("Parameters: input_file_path output_file_path");
+        } else {
+            LOGGER.error("Parameters: input_file_path output_file_path");
         }
     }
 }

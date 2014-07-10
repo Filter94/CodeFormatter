@@ -18,6 +18,6 @@ public interface OutStream {
      * @throws StreamException - if stream is not available
      */
 
-    public void close() throws StreamException;
+    void close() throws StreamException;
 }
 

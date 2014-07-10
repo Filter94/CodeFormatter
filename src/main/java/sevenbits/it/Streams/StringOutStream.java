@@ -8,14 +8,14 @@ import java.io.StringWriter;
  */
 
 public class StringOutStream implements OutStream {
-    StringWriter stringWriter;
+    private final StringWriter stringWriter;
 
     /**
      * Creates stream on String with given size
      * @param size - size of String that will be stream
      */
 
-    public StringOutStream(int size){
+    public StringOutStream(final int size) {
         stringWriter = new StringWriter(size);
     }
 
@@ -24,24 +24,18 @@ public class StringOutStream implements OutStream {
      * @return - String which
      */
 
-    public String toString(){
+    public String toString() {
         return stringWriter.toString();
     }
 
-    public void writeSymbol(char b) throws StreamException{
+    public void writeSymbol(final char b) throws StreamException {
             stringWriter.write(b);
     }
 
-    public void writeString(String str) throws StreamException{
-        for(int i = 0; i < str.length(); i++)
-            stringWriter.write(str.charAt(i));
-    }
-
-    public void close() throws StreamException{
+    public void close() throws StreamException {
         try {
             stringWriter.close();
-        }
-        catch(IOException ex){
+        } catch (IOException ex) {
             throw new StreamException(ex.getMessage(), ex.getCause());
         }
     }
