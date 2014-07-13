@@ -47,15 +47,12 @@ public class CodeFormatter {
                        final FormatOptions options) throws FormatterException, StreamException {
         indentLength = options.getIndentSize();
         indentChar = options.getIndent();
-
         Character currentChar = 'a';
         Character previousChar;
-
-        String buffer;
         int nestingLevel = 0;
         int mode = 0;
         boolean endOfStream = true;
-        boolean newLine = true;
+        boolean newLine = false;
         try {
             endOfStream = inStream.isEnd();
         } catch (StreamException ex) {
@@ -69,30 +66,28 @@ public class CodeFormatter {
             }
             previousChar = currentChar;
             currentChar = inStream.readSymbol();
-            if (previousChar == '/' && (currentChar != '/' && currentChar != '*')) {
-                outStream.writeSymbol(' ');
-                previousChar = ' ';
-            }
             switch (mode) {
-                case MODE_REGULAR: {
-                if (previousChar == '\n') {
-                    newLine = true;
-                }
-                if (previousChar == '\n' && currentChar != ' ') {
-                    int indents = nestingLevel - 1;
-                    if (!OPERATIONS.contains(currentChar)) {
-                        writeNIndents(outStream, indents);
+                case MODE_REGULAR:
+                    if (previousChar == '/' && (currentChar != '/' && currentChar != '*')) {
+                        outStream.writeSymbol(' ');
+                        previousChar = ' ';
                     }
-                    if (currentChar != '}') {
-                        writeNIndents(outStream, 1);
+                    if (previousChar == '\n') {
+                        newLine = true;
                     }
-                    if (newLine && currentChar != ' ') {
+                    if (newLine && currentChar != ' ' && currentChar != '\n') {
+                        int indents = nestingLevel - 1;
+                        if (!OPERATIONS.contains(currentChar)) {
+                            writeNIndents(outStream, indents);
+                        }
+                        if (currentChar != '}') {
+                            writeNIndents(outStream, 1);
+                        }
                         newLine = false;
                     }
-                }
                     switch (currentChar) {
                         case '\r':break;
-                        case '}':  {
+                        case '}':
                             if (nestingLevel != 0) {
                                 nestingLevel--;
                             } else {
@@ -103,78 +98,51 @@ public class CodeFormatter {
                             processClosingCurlyBracket(outStream, nestingLevel);
                             currentChar = '\n';
                             break;
-                        }
-                        case ' ': {
+                        case ' ':
                             processSpaces(outStream,  previousChar);
                             break;
-                        }
-                        case '{': {
+                        case '{':
                             nestingLevel++;
                             processOpeningCurlyBracket(outStream);
                             currentChar = '\n';
                             break;
-                        }
                         case '"':
                         case '\'':
-                        case '\\': {
-                            mode = processCommentSymbol(outStream, currentChar, previousChar);
-                        }
+                        case '\\':
+                            mode = processCommentSymbol(outStream, currentChar);
                             break;
-                        case '/': {
-                            buffer = "";
-                            if (previousChar != '/') {
-                                if (previousChar != ' ') {
-                                    buffer += ' ';
-                                }
-                            } else {
-                                mode = MODE_DOUBLE_SLASH;
-                            }
-                            buffer += currentChar;
-                            writeString(outStream, buffer);
+                        case '/':
+                            mode = processSlash(previousChar, currentChar, outStream);
+                            currentChar = ' ';
                             break;
-                        }
-                        case '*': {
-                            buffer = "";
-                            if (previousChar == '/') {
-                                mode = MODE_SLASH_ASTERISK;
-                            } else {
-                                if (previousChar != ' ') {
-                                    buffer += " ";
-                                }
-                            }
-                            buffer += currentChar;
-                            writeString(outStream, buffer);
+                        case '*':
+                            mode = processAsterix(previousChar, currentChar, outStream);
+                            currentChar = ' ';
                             break;
-                        }
                         case '=':
                         case '-':
                         case '&':
                         case '|':
-                        case '+': {
-                            buffer = " " + currentChar + " ";
-                            writeString(outStream,  buffer);
+                        case '!':
+                        case '+':
+                            processOperation(previousChar, currentChar, outStream);
+                            currentChar = ' ';
                             break;
-                        }
-                        case '(': {
+                        case '(':
                             processOpeningBracket(previousChar, outStream);
                             break;
-                        }
-                        case ')': {
+                        case ')':
                             processClosingBracket(outStream);
                             break;
-                        }
-                        case ';': {
+                        case ';':
                             processSemicolon(outStream);
                             currentChar = '\n';
                             break;
-                        }
-                        default: {
+                        default:
                             processSymbol(outStream, currentChar);
                             break;
-                        }
                     }
                     break;
-                }
                 case MODE_DOUBLE_SLASH:
                     if (currentChar == '\n') {
                         if (logger.isEnabledFor(Level.DEBUG)) {
@@ -230,13 +198,26 @@ public class CodeFormatter {
             }
         }
         if (nestingLevel != 0) {
-            String message = "Delimiters does not match";
-            Throwable ex = new Exception(message);
-            if (logger.isEnabledFor(Level.ERROR)) {
-                logger.fatal(ex.getMessage());
-            }
-            throw new NotEnoughBracketsException(ex.getMessage(), ex.getCause());
+            throw new NotEnoughBracketsException("Delimiters does not match");
         }
+    }
+
+    int processAsterix(final Character previousChar, final  Character currentChar, final  OutStream outStream) throws StreamException {
+        int mode = MODE_REGULAR;
+        String buffer = "";
+        if (previousChar == '/') {
+            mode = MODE_SLASH_ASTERISK;
+        } else {
+            if (previousChar != ' ') {
+                buffer += " ";
+            }
+        }
+        buffer += currentChar;
+        if (mode == MODE_REGULAR) {
+            buffer += " ";
+        }
+        writeString(outStream, buffer);
+        return mode;
     }
 
     /**
@@ -250,6 +231,30 @@ public class CodeFormatter {
             for (int i = 0; i < str.length(); i++) {
                 outStream.writeSymbol(str.charAt(i));
             }
+    }
+
+    void processOperation(final Character previousChar, final  Character currentChar, final  OutStream outStream)  throws StreamException {
+        String buffer = "";
+        if (previousChar != ' ') {
+            buffer += " ";
+        }
+        buffer += currentChar + " ";
+        writeString(outStream,  buffer);
+    }
+
+    int processSlash(final Character previousChar, final  Character currentChar, final  OutStream outStream) throws StreamException {
+        String buffer = "";
+        int mode = MODE_REGULAR;
+        if (previousChar != '/') {
+            if (previousChar != ' ') {
+                buffer += ' ';
+            }
+        } else {
+            mode = MODE_DOUBLE_SLASH;
+        }
+        buffer += currentChar;
+        writeString(outStream, buffer);
+        return mode;
     }
 
     private void processOpeningBracket(final Character previousChar, final OutStream outStream) throws StreamException {
@@ -299,8 +304,7 @@ public class CodeFormatter {
         }
     }
 
-    private int processCommentSymbol(final OutStream outStream, final Character currentChar,
-                                     final  Character previousChar) throws StreamException {
+    private int processCommentSymbol(final OutStream outStream, final Character currentChar) throws StreamException {
         outStream.writeSymbol(currentChar);
         switch (currentChar) {
             case '"':

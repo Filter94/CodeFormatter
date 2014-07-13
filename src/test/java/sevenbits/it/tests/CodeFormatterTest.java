@@ -13,6 +13,8 @@ import sevenbits.it.Streams.StringOutStream;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Tests formatter
@@ -36,9 +38,9 @@ public class CodeFormatterTest {
     private void makeTest(final FormatOptions formatOptions) throws StreamException, FormatterException {
         CodeFormatter codeFormatter = new CodeFormatter();
 
-            StringOutStream stringOutStream = new StringOutStream(MAX_STREAM_LENGTH);
-            codeFormatter.format(new StringInStream(javaCode), stringOutStream, formatOptions);
-            formattedCode = stringOutStream.toString();
+        StringOutStream stringOutStream = new StringOutStream(MAX_STREAM_LENGTH);
+        codeFormatter.format(new StringInStream(javaCode), stringOutStream, formatOptions);
+        formattedCode = stringOutStream.toString();
     }
 
     @org.junit.Test
@@ -126,23 +128,21 @@ public class CodeFormatterTest {
         int nestingLevel = 0;
         String buffer;
         String rughtfullyInedentent;
-        String [] strings = formattedCode.split("\n");
+        String[] strings = formattedCode.split("\n");
         boolean firstInLine;
-        for (String currentString: strings) {
-            Character currentChar = '\n';
+        for (String currentString : strings) {
+            Character currentChar;
             int j;
             firstInLine = true;
-            for (j = 0; j < currentString.length() ; j++) {
-                if (firstInLine) {
+            for (j = 0; j < currentString.length(); j++) {
+                currentChar = currentString.charAt(j);
+                if (firstInLine && currentChar != ' ') {
                     rughtfullyInedentent = "";
-                    if (currentChar != '}') {
-                        for (int g = 0; g < nestingLevel; g++) {
-                            rughtfullyInedentent += "    ";
-                        }
-                    } else {
-                        for (int g = 0; g < nestingLevel - 1; g++) {
-                            rughtfullyInedentent += "    ";
-                        }
+                    for (int g = 0; g < nestingLevel - 1; g++) {
+                        rughtfullyInedentent += "    ";
+                    }
+                    if (currentChar != '}' && nestingLevel > 0) {
+                        rughtfullyInedentent += "    ";
                     }
                     rughtfullyInedentent += currentChar;
                     buffer = currentString.substring(0, rughtfullyInedentent.length());
@@ -156,6 +156,9 @@ public class CodeFormatterTest {
                     nestingLevel--;
                 }
             }
+        }
+        if (nestingLevel != 0) {
+            assert false;
         }
     }
 
@@ -171,11 +174,11 @@ public class CodeFormatterTest {
             }
             assert false;
         }
-        String [] strings = formattedCode.split("\n");
-        for (String currentString: strings) {
+        String[] strings = formattedCode.split("\n");
+        for (String currentString : strings) {
             Character currentChar = '\n';
             int j;
-            for (j = 0; j < currentString.length() ; j++) {
+            for (j = 0; j < currentString.length(); j++) {
                 if (currentString.charAt(j) == '{') {
                     currentChar = currentString.charAt(j);
                     break;
@@ -203,11 +206,11 @@ public class CodeFormatterTest {
             }
             assert false;
         }
-        String [] strings = formattedCode.split("\n");
-        for (String currentString: strings) {
+        String[] strings = formattedCode.split("\n");
+        for (String currentString : strings) {
             Character currentChar = '\n';
             int j;
-            for (j = 0; j < currentString.length() ; j++) {
+            for (j = 0; j < currentString.length(); j++) {
                 if (currentString.charAt(j) == '}') {
                     currentChar = currentString.charAt(j);
                     break;
@@ -235,11 +238,11 @@ public class CodeFormatterTest {
             }
             assert false;
         }
-        String [] strings = formattedCode.split("\n");
-        for (String currentString: strings) {
+        String[] strings = formattedCode.split("\n");
+        for (String currentString : strings) {
             Character currentChar = '\n';
             int j;
-            for (j = 0; j < currentString.length() ; j++) {
+            for (j = 0; j < currentString.length(); j++) {
                 if (currentString.charAt(j) == ';') {
                     currentChar = currentString.charAt(j);
                     break;
@@ -255,4 +258,35 @@ public class CodeFormatterTest {
         }
     }
 
+    @org.junit.Test
+    public void testSpacesAroundOperations() {
+        javaCode = "{{{{a+b=3;{{{{{{+++{{{{&&}}{{{int a=3-f;{{{!}||}}}}**a}{{}}}---}}}!!}}}/}}}}}";
+        FormatOptions formatOptions = new FormatOptions();
+        try {
+            makeTest(formatOptions);
+        } catch (Exception ex) {
+            if (logger.isEnabledFor(Level.ERROR)) {
+                logger.error(ex.getMessage());
+            }
+            assert false;
+        }
+        String[] strings = formattedCode.split("\n");
+        Set<Character> operations = new TreeSet<>();
+        operations.add('+');
+        operations.add('-');
+        operations.add('=');
+        operations.add('*');
+        operations.add('&');
+        operations.add('|');
+        operations.add('!');
+        for (String currentString : strings) {
+            int j;
+            for (j = 0; j < currentString.length(); j++) {
+                if (operations.contains(currentString.charAt(j))) {
+                    assert (currentString.charAt(j - 1) == ' ' && currentString.charAt(j + 1) == ' ');
+                    assert currentString.charAt(j + 2) != ' ';
+                }
+            }
+        }
+    }
 }

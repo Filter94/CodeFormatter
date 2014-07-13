@@ -6,6 +6,7 @@ package sevenbits.it.CodeFormatter;
 
 class NotEnoughBracketsException extends FormatterException {
     NotEnoughBracketsException(){}
+    NotEnoughBracketsException(final String message) { super(message); }
     NotEnoughBracketsException(final String message, final Throwable cause) {
         super(message, cause);
     }
