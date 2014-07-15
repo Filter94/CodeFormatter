@@ -67,6 +67,16 @@ public class CodeFormatterTest {
     }
 
     @org.junit.Test
+    public void testUselessSpaces() throws Exception {
+        javaCode = "{{{               a+b=3;}   }}";
+        String expectedString = "{\n    {\n        {\n            a + b = 3;\n        }\n    }\n}\n";
+        FormatOptions formatOptions = new FormatOptions();
+        makeTest(formatOptions);
+        System.out.println("x" + formattedCode + "x");
+        assert expectedString.equals(formattedCode);
+    }
+
+    @org.junit.Test
     public void testIndents() {
         javaCode = "{{{ adasd;{sadadasda;{if(a){dasdasdasd;}{{{{{{{{{}}{{asdadsadda;{{{{}}dadasdasdasd;}}}}{{}}}}}}dadadasdad;}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
