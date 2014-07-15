@@ -9,8 +9,6 @@ import it.sevenbits.formatter.FormatOptions;
 import it.sevenbits.streams.FileInStream;
 import it.sevenbits.streams.FileOutStream;
 
-import java.util.Formatter;
-
 /**
  * Formates compiled java code
  */
@@ -40,8 +38,7 @@ final class Main {
                 if (LOGGER.isEnabledFor(Level.ERROR)) {
                     LOGGER.error(ex.getMessage());
                 }
-            }
-            catch (StreamException ex) {
+            } catch (StreamException ex) {
                 if (LOGGER.isEnabledFor(Level.FATAL)) {
                     LOGGER.fatal(ex.getMessage());
                 }
