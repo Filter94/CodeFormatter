@@ -2,8 +2,8 @@ package it.sevenbits;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
-import it.sevenbits.codeformatter.CodeFormatter;
-import it.sevenbits.codeformatter.FormatOptions;
+import it.sevenbits.formatter.CodeFormatter;
+import it.sevenbits.formatter.FormatOptions;
 import it.sevenbits.streams.FileInStream;
 import it.sevenbits.streams.FileOutStream;
 

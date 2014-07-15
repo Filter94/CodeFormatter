@@ -2,9 +2,9 @@ package it.sevenbits.tests;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import it.sevenbits.codeformatter.CodeFormatter;
-import it.sevenbits.codeformatter.FormatOptions;
-import it.sevenbits.codeformatter.FormatterException;
+import it.sevenbits.formatter.CodeFormatter;
+import it.sevenbits.formatter.FormatOptions;
+import it.sevenbits.formatter.FormatterException;
 import it.sevenbits.streams.StreamException;
 import it.sevenbits.streams.StringInStream;
 import it.sevenbits.streams.StringOutStream;
@@ -72,7 +72,6 @@ public class CodeFormatterTest {
         String expectedString = "{\n    {\n        {\n            a + b = 3;\n        }\n    }\n}\n";
         FormatOptions formatOptions = new FormatOptions();
         makeTest(formatOptions);
-        System.out.println("x" + formattedCode + "x");
         assert expectedString.equals(formattedCode);
     }
 
