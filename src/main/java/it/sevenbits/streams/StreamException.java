@@ -1,4 +1,4 @@
-package it.sevenbits.Streams;
+package it.sevenbits.streams;
 
 /**
  * Raises when there is some problems with stream

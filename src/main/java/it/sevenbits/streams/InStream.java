@@ -1,4 +1,4 @@
-package it.sevenbits.Streams;
+package it.sevenbits.streams;
 
 /**
  *  Simple input stream

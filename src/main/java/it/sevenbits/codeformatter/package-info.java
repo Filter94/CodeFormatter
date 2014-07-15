@@ -1,4 +1,4 @@
 /**
 * Provides classes to format java code
 */
-package it.sevenbits.CodeFormatter;
+package it.sevenbits.codeformatter;

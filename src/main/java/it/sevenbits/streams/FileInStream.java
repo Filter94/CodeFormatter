@@ -1,4 +1,4 @@
-package it.sevenbits.Streams;
+package it.sevenbits.streams;
 
 import java.io.FileInputStream;
 import java.io.IOException;

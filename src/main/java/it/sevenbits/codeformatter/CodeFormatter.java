@@ -1,10 +1,10 @@
-package it.sevenbits.CodeFormatter;
+package it.sevenbits.codeformatter;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import it.sevenbits.Streams.InStream;
-import it.sevenbits.Streams.OutStream;
-import it.sevenbits.Streams.StreamException;
+import it.sevenbits.streams.InStream;
+import it.sevenbits.streams.OutStream;
+import it.sevenbits.streams.StreamException;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -14,9 +14,10 @@ import java.util.TreeSet;
  */
 
 public class CodeFormatter {
-    private final Logger  logger = Logger.getLogger(CodeFormatter.class.getName());
-    private int indentLength;
-    private Character indentChar;
+    private final Logger logger = Logger.getLogger(CodeFormatter.class.getName());
+    private static final int DEFAULT_INDENT_LENGTH = 4;
+    private static final Character DEFAULT_INDENT_CHAR = ' ';
+
     private static final Set<Character> OPERATIONS = new TreeSet();
     static {
         OPERATIONS.add('+');
@@ -43,9 +44,15 @@ public class CodeFormatter {
      */
 
     public void format(final InStream inStream, final OutStream outStream,
-                       final FormatOptions options) throws FormatterException {
-        indentLength = options.getIndentSize();
-        indentChar = options.getIndent();
+        final FormatOptions options) throws FormatterException {
+        int indentLength = options.getIndentSize();
+        if (indentLength == 0) {
+            indentLength = DEFAULT_INDENT_LENGTH;
+        }
+        Character indentChar = options.getIndent();
+        if (indentChar == null) {
+            indentChar = DEFAULT_INDENT_CHAR;
+        }
         Character currentChar = 'a';
         Character previousChar;
         int nestingLevel = 0;
@@ -84,14 +91,14 @@ public class CodeFormatter {
                         int indents = nestingLevel - 1;
                         if (!OPERATIONS.contains(currentChar)) {
                             try {
-                                writeNIndents(outStream, indents);
+                                writeNIndents(outStream, indents, indentLength, indentChar);
                             } catch (StreamException ex) {
                                 throw new FormatterException(ex);
                             }
                         }
                         if (currentChar != '}') {
                             try {
-                                writeNIndents(outStream, 1);
+                                writeNIndents(outStream, 1, indentLength, indentChar);
                             } catch (StreamException ex) {
                                 throw new FormatterException(ex);
                             }
@@ -108,7 +115,11 @@ public class CodeFormatter {
                                 NotEnoughBracketsException ex = new NotEnoughBracketsException();
                                 throw new NotEnoughBracketsException(message , ex);
                             }
-                            processClosingCurlyBracket(outStream, nestingLevel);
+                            try {
+                                processClosingCurlyBracket(outStream, nestingLevel);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             currentChar = '\n';
                             break;
                         case ' ':
@@ -146,7 +157,7 @@ public class CodeFormatter {
                             break;
                         case '*':
                             try {
-                                mode = processAsterix(previousChar, currentChar, outStream);
+                                mode = processAsterisk(previousChar, currentChar, outStream);
                             } catch (StreamException ex) {
                                 throw new FormatterException(ex);
                             }
@@ -256,7 +267,7 @@ public class CodeFormatter {
         }
     }
 
-    int processAsterix(final Character previousChar, final  Character currentChar, final  OutStream outStream) throws StreamException {
+    int processAsterisk(final Character previousChar, final Character currentChar, final OutStream outStream) throws StreamException {
         int mode = MODE_REGULAR;
         String buffer = "";
         if (previousChar == '/') {
@@ -278,7 +289,7 @@ public class CodeFormatter {
      * Writes string into stream
      * @param outStream - OutStream to which the String will be written
      * @param str - String that will be written into stream
-     * @throws it.sevenbits.Streams.StreamException - throws when OutStream is not available or corrupted
+     * @throws it.sevenbits.streams.StreamException - throws when OutStream is not available or corrupted
      */
 
     private void writeString(final OutStream outStream, final String str) throws StreamException {
@@ -339,17 +350,13 @@ public class CodeFormatter {
         writeString(outStream, "{\n");
     }
 
-    private void processClosingCurlyBracket(final OutStream outStream, final int nestingLevel) {
+    private void processClosingCurlyBracket(final OutStream outStream, final int nestingLevel) throws StreamException {
         String buffer;
         buffer = "}\n";
         if (nestingLevel == 0) {
             buffer += '\n';
         }
-        try {
-            writeString(outStream, buffer);
-        } catch (StreamException ex) {
-            System.out.print("log");
-        }
+        writeString(outStream, buffer);
     }
 
     private void processSpaces(final OutStream outStream, final Character previousChar) throws StreamException {
@@ -371,7 +378,8 @@ public class CodeFormatter {
         }
     }
 
-    private void writeNIndents(final OutStream outStream, final int n)throws StreamException {
+    private void writeNIndents(final OutStream outStream, final int n, final int indentLength,
+    final Character indentChar)throws StreamException {
         String buffer = "";
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < indentLength; j++) {

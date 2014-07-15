@@ -1,4 +1,4 @@
-package it.sevenbits.CodeFormatter;
+package it.sevenbits.codeformatter;
 
 /**
  * Raises when there is some logical problems in formatter

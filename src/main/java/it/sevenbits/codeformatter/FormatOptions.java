@@ -1,4 +1,4 @@
-package it.sevenbits.CodeFormatter;
+package it.sevenbits.codeformatter;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;

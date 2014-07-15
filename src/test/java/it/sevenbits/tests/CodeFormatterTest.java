@@ -2,12 +2,12 @@ package it.sevenbits.tests;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import it.sevenbits.CodeFormatter.CodeFormatter;
-import it.sevenbits.CodeFormatter.FormatOptions;
-import it.sevenbits.CodeFormatter.FormatterException;
-import it.sevenbits.Streams.StreamException;
-import it.sevenbits.Streams.StringInStream;
-import it.sevenbits.Streams.StringOutStream;
+import it.sevenbits.codeformatter.CodeFormatter;
+import it.sevenbits.codeformatter.FormatOptions;
+import it.sevenbits.codeformatter.FormatterException;
+import it.sevenbits.streams.StreamException;
+import it.sevenbits.streams.StringInStream;
+import it.sevenbits.streams.StringOutStream;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -138,7 +138,7 @@ public class CodeFormatterTest {
                 }
             }
             if (currentChar == '{') {
-                assert j == currentString.length();
+                assert j == currentString.length() - 1;
             }
         }
     }
@@ -166,7 +166,7 @@ public class CodeFormatterTest {
                 }
             }
             if (currentChar == '}') {
-                assert j == currentString.length();
+                assert j == currentString.length() - 1;
             }
         }
     }
@@ -194,7 +194,7 @@ public class CodeFormatterTest {
                 }
             }
             if (currentChar == ';') {
-                assert j == currentString.length();
+                assert j == currentString.length() - 1;
             }
         }
     }

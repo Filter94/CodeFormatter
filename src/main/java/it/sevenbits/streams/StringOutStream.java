@@ -1,4 +1,4 @@
-package it.sevenbits.Streams;
+package it.sevenbits.streams;
 
 import java.io.IOException;
 import java.io.StringWriter;
