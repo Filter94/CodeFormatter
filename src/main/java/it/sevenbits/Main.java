@@ -1,11 +1,15 @@
 package it.sevenbits;
 
+import it.sevenbits.formatter.FormatterException;
+import it.sevenbits.streams.StreamException;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 import it.sevenbits.formatter.CodeFormatter;
 import it.sevenbits.formatter.FormatOptions;
 import it.sevenbits.streams.FileInStream;
 import it.sevenbits.streams.FileOutStream;
+
+import java.util.Formatter;
 
 /**
  * Formates compiled java code
@@ -32,11 +36,15 @@ final class Main {
                 fis = new FileInStream(args[0]);
                 fos = new FileOutStream(args[1]);
                 codeFormatter.format(fis, fos, formatOptions);
-            } catch (Exception ex) {
+            } catch (FormatterException ex) {
                 if (LOGGER.isEnabledFor(Level.ERROR)) {
                     LOGGER.error(ex.getMessage());
                 }
-                assert false;
+            }
+            catch (StreamException ex) {
+                if (LOGGER.isEnabledFor(Level.FATAL)) {
+                    LOGGER.fatal(ex.getMessage());
+                }
             }
         } else {
             LOGGER.error("Parameters: input_file_path output_file_path");
