@@ -1,4 +1,4 @@
-package sevenbits.it.Streams;
+package it.sevenbits.Streams;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

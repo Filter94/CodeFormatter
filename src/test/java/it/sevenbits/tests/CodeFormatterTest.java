@@ -1,18 +1,14 @@
-package sevenbits.it.tests;
+package it.sevenbits.tests;
 
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import sevenbits.it.CodeFormatter.CodeFormatter;
-import sevenbits.it.CodeFormatter.FormatOptions;
-import sevenbits.it.CodeFormatter.FormatterException;
-import sevenbits.it.Streams.StreamException;
-import sevenbits.it.Streams.StringInStream;
-import sevenbits.it.Streams.StringOutStream;
+import it.sevenbits.CodeFormatter.CodeFormatter;
+import it.sevenbits.CodeFormatter.FormatOptions;
+import it.sevenbits.CodeFormatter.FormatterException;
+import it.sevenbits.Streams.StreamException;
+import it.sevenbits.Streams.StringInStream;
+import it.sevenbits.Streams.StringOutStream;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -25,15 +21,6 @@ public class CodeFormatterTest {
     private String javaCode;
     private String formattedCode;
     private final Logger logger = Logger.getLogger(CodeFormatterTest.class.getName());
-
-    static {
-        String defaultLog4jProperties = "log4j.properties";
-        try {
-            PropertyConfigurator.configure(new FileInputStream(defaultLog4jProperties));
-        } catch (FileNotFoundException ex) {
-            BasicConfigurator.configure();
-        }
-    }
 
     private void makeTest(final FormatOptions formatOptions) throws StreamException, FormatterException {
         CodeFormatter codeFormatter = new CodeFormatter();
@@ -58,59 +45,25 @@ public class CodeFormatterTest {
         assert true;
     }
 
-    @org.junit.Test
+    @org.junit.Test(expected = FormatterException.class)
     public void testLessClosingDelimiters() throws Exception {
         javaCode = "{{{{{{{{{{{{{{{{{{{}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
-        boolean testPassed = false;
-        try {
-            makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR)) {
-                logger.error(ex.getMessage());
-            }
-            testPassed = true;
-        } catch (Exception ex) {
-            if (logger.isEnabledFor(Level.ERROR)) {
-                logger.error(ex.getMessage());
-            }
-        }
-        assert testPassed;
+        makeTest(formatOptions);
     }
 
-    @org.junit.Test
-    public void testMoreClosingDelimiters() {
+    @org.junit.Test(expected = FormatterException.class)
+    public void testMoreClosingDelimiters()  throws Exception {
         javaCode = "{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
-        boolean testPassed = false;
-        try {
-            makeTest(formatOptions);
-        } catch (FormatterException ex) {
-            if (logger.isEnabledFor(Level.ERROR)) {
-                logger.error(ex.getMessage());
-            }
-            testPassed = true;
-        } catch (Exception ex) {
-            if (logger.isEnabledFor(Level.ERROR)) {
-                logger.error(ex.getMessage());
-            }
-        }
-        assert testPassed;
+        makeTest(formatOptions);
     }
 
     @org.junit.Test
-    public void testOnlyDelimiters() {
+    public void testOnlyDelimiters() throws Exception {
         javaCode = "{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}";
         FormatOptions formatOptions = new FormatOptions();
-        try {
-            makeTest(formatOptions);
-        } catch (Exception ex) {
-            if (logger.isEnabledFor(Level.ERROR)) {
-                logger.error(ex.getMessage());
-            }
-            assert false;
-        }
-        assert true;
+        makeTest(formatOptions);
     }
 
     @org.junit.Test
@@ -185,11 +138,7 @@ public class CodeFormatterTest {
                 }
             }
             if (currentChar == '{') {
-                try {
-                    currentString.charAt(j + 1);
-                } catch (Exception ex) {
-                    assert true;
-                }
+                assert j == currentString.length();
             }
         }
     }
@@ -217,11 +166,7 @@ public class CodeFormatterTest {
                 }
             }
             if (currentChar == '}') {
-                try {
-                    currentString.charAt(j + 1);
-                } catch (Exception ex) {
-                    assert true;
-                }
+                assert j == currentString.length();
             }
         }
     }
@@ -249,11 +194,7 @@ public class CodeFormatterTest {
                 }
             }
             if (currentChar == ';') {
-                try {
-                    currentString.charAt(j + 1);
-                } catch (Exception ex) {
-                    assert true;
-                }
+                assert j == currentString.length();
             }
         }
     }

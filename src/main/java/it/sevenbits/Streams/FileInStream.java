@@ -1,4 +1,4 @@
-package sevenbits.it.Streams;
+package it.sevenbits.Streams;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class FileInStream implements InStream {
         try {
             return fileInputStream.available() < 1;
         } catch (IOException ex) {
-            throw new StreamException(ex.getMessage(), ex.getCause());
+            throw new StreamException(ex);
         }
     }
 

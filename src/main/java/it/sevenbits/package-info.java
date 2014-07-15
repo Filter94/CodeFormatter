@@ -1,4 +1,4 @@
 /**
  * Main class
  */
-package sevenbits.it;
+package it.sevenbits;

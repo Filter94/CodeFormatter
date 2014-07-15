@@ -1,10 +1,10 @@
-package sevenbits.it.CodeFormatter;
+package it.sevenbits.CodeFormatter;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import sevenbits.it.Streams.InStream;
-import sevenbits.it.Streams.OutStream;
-import sevenbits.it.Streams.StreamException;
+import it.sevenbits.Streams.InStream;
+import it.sevenbits.Streams.OutStream;
+import it.sevenbits.Streams.StreamException;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -17,7 +17,7 @@ public class CodeFormatter {
     private final Logger  logger = Logger.getLogger(CodeFormatter.class.getName());
     private int indentLength;
     private Character indentChar;
-    private static final Set<Character> OPERATIONS = new TreeSet<>();
+    private static final Set<Character> OPERATIONS = new TreeSet();
     static {
         OPERATIONS.add('+');
         OPERATIONS.add('-');
@@ -40,36 +40,41 @@ public class CodeFormatter {
      * @param outStream - stream where formatted java code will be written
      * @param options - contains options for formatter
      * @throws FormatterException  - if there is delimiters mismatch
-     * @throws StreamException - if there is problems with streams
      */
 
     public void format(final InStream inStream, final OutStream outStream,
-                       final FormatOptions options) throws FormatterException, StreamException {
+                       final FormatOptions options) throws FormatterException {
         indentLength = options.getIndentSize();
         indentChar = options.getIndent();
         Character currentChar = 'a';
         Character previousChar;
         int nestingLevel = 0;
         int mode = 0;
-        boolean endOfStream = true;
+        boolean endOfStream;
         boolean newLine = false;
         try {
             endOfStream = inStream.isEnd();
         } catch (StreamException ex) {
-            if (logger.isEnabledFor(Level.FATAL)) {
-                logger.fatal(ex.getMessage());
-            }
+            throw new FormatterException(ex);
         }
         while (!endOfStream) {
             if (logger.isEnabledFor(Level.DEBUG)) {
                 logger.debug("New symbol.");
             }
             previousChar = currentChar;
-            currentChar = inStream.readSymbol();
+            try {
+                currentChar = inStream.readSymbol();
+            } catch (StreamException ex) {
+                throw new FormatterException(ex);
+            }
             switch (mode) {
                 case MODE_REGULAR:
                     if (previousChar == '/' && (currentChar != '/' && currentChar != '*')) {
-                        outStream.writeSymbol(' ');
+                        try {
+                            outStream.writeSymbol(' ');
+                        } catch (StreamException ex) {
+                        throw new FormatterException(ex);
+                }
                         previousChar = ' ';
                     }
                     if (previousChar == '\n') {
@@ -78,10 +83,18 @@ public class CodeFormatter {
                     if (newLine && currentChar != ' ' && currentChar != '\n') {
                         int indents = nestingLevel - 1;
                         if (!OPERATIONS.contains(currentChar)) {
-                            writeNIndents(outStream, indents);
+                            try {
+                                writeNIndents(outStream, indents);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                         }
                         if (currentChar != '}') {
-                            writeNIndents(outStream, 1);
+                            try {
+                                writeNIndents(outStream, 1);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                         }
                         newLine = false;
                     }
@@ -99,24 +112,44 @@ public class CodeFormatter {
                             currentChar = '\n';
                             break;
                         case ' ':
-                            processSpaces(outStream,  previousChar);
+                            try {
+                                processSpaces(outStream,  previousChar);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             break;
                         case '{':
                             nestingLevel++;
-                            processOpeningCurlyBracket(outStream);
+                            try {
+                                processOpeningCurlyBracket(outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             currentChar = '\n';
                             break;
                         case '"':
                         case '\'':
                         case '\\':
-                            mode = processCommentSymbol(outStream, currentChar);
+                            try {
+                                mode = processCommentSymbol(outStream, currentChar);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             break;
                         case '/':
-                            mode = processSlash(previousChar, currentChar, outStream);
+                            try {
+                                mode = processSlash(previousChar, currentChar, outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             currentChar = ' ';
                             break;
                         case '*':
-                            mode = processAsterix(previousChar, currentChar, outStream);
+                            try {
+                                mode = processAsterix(previousChar, currentChar, outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             currentChar = ' ';
                             break;
                         case '=':
@@ -125,21 +158,41 @@ public class CodeFormatter {
                         case '|':
                         case '!':
                         case '+':
-                            processOperation(previousChar, currentChar, outStream);
+                            try {
+                                processOperation(previousChar, currentChar, outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             currentChar = ' ';
                             break;
                         case '(':
-                            processOpeningBracket(previousChar, outStream);
+                            try {
+                                processOpeningBracket(previousChar, outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             break;
                         case ')':
-                            processClosingBracket(outStream);
+                            try {
+                                processClosingBracket(outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             break;
                         case ';':
-                            processSemicolon(outStream);
+                            try {
+                                processSemicolon(outStream);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             currentChar = '\n';
                             break;
                         default:
-                            processSymbol(outStream, currentChar);
+                            try {
+                                processSymbol(outStream, currentChar);
+                            } catch (StreamException ex) {
+                                throw new FormatterException(ex);
+                            }
                             break;
                     }
                     break;
@@ -179,7 +232,11 @@ public class CodeFormatter {
                         mode = MODE_REGULAR;
                     }
                 default:
-                    outStream.writeSymbol(currentChar);
+                    try {
+                        outStream.writeSymbol(currentChar);
+                    } catch (StreamException ex) {
+                        throw new FormatterException(ex);
+                    }
                     if (mode == MODE_BACKSLASH) {
                         currentChar = 'a';  // annuls meaning of current symbol
                     }
@@ -191,10 +248,7 @@ public class CodeFormatter {
             try {
                 endOfStream = inStream.isEnd();
             } catch (StreamException ex) {
-                if (logger.isEnabledFor(Level.FATAL)) {
-                    logger.fatal(ex.getMessage());
-                }
-                throw ex;
+                throw new FormatterException(ex);
             }
         }
         if (nestingLevel != 0) {
@@ -224,7 +278,7 @@ public class CodeFormatter {
      * Writes string into stream
      * @param outStream - OutStream to which the String will be written
      * @param str - String that will be written into stream
-     * @throws sevenbits.it.Streams.StreamException - throws when OutStream is not available or corrupted
+     * @throws it.sevenbits.Streams.StreamException - throws when OutStream is not available or corrupted
      */
 
     private void writeString(final OutStream outStream, final String str) throws StreamException {

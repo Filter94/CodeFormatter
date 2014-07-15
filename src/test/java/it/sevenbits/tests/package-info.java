@@ -1,4 +1,4 @@
 /**
  * Tests for formatter
  */
-package sevenbits.it.tests;
+package it.sevenbits.tests;

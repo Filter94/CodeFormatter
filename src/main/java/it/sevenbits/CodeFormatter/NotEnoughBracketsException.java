@@ -1,4 +1,4 @@
-package sevenbits.it.CodeFormatter;
+package it.sevenbits.CodeFormatter;
 
 /**
  * Raises when there is brackets mismatch

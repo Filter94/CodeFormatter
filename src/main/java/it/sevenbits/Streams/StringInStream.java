@@ -1,4 +1,4 @@
-package sevenbits.it.Streams;
+package it.sevenbits.Streams;
 
 /**
  * Represents String as a Stream
